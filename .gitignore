@@ -7,7 +7,7 @@ __pycache__/
 *.so
 
 .idea
-
+Lab1/imagenet-10/
 
 # Distribution / packaging
 .Python
