@@ -104,12 +104,13 @@ def perform_test(net, testing_set, batch_size, saveto:str):
         inputs, labels = inputs.cuda(), labels.cuda()
 
         #adv_inputs = batch_fgsm_attack(net, inputs, labels, epsilon=8/255.0)
-        adv_inputs = []
-        for i in range(len(inputs)):
-            adv_inputs.append(single_fgsm_attack(net, inputs[i], labels[i], epsilon=8/255.0))
-        adv_inputs = torch.stack(adv_inputs)
+        #adv_inputs = []
+        #for i in range(len(inputs)):
+        #    adv_inputs.append(single_fgsm_attack(net, inputs[i], labels[i], epsilon=8/255.0))
+        #adv_inputs = torch.stack(adv_inputs)
         with torch.no_grad():
-            outputs = net(adv_inputs)
+            #outputs = net(adv_inputs)
+            outputs = net(inputs)
 
             pred_vals, pred_classes = torch.max(outputs.data, 1)
             correct += (pred_classes == labels).sum().item()
@@ -143,6 +144,7 @@ def run_confusion_matrix(dataset, targets, predictions):
     ax.set_title('Confusion Matrix', fontdict=title_font)
     cmp.plot(ax=ax)
 
+    plt.setp(ax.get_xticklabels(), rotation=45, ha="right", rotation_mode="anchor")
     plt.show()
 
     printshare(classification_report(y_true=targets, y_pred=predictions, target_names=display_labels))
@@ -194,17 +196,17 @@ if __name__ == '__main__':
         ),
         v2.RandomHorizontalFlip(p=0.5),
 
-        v2.ToDtype(torch.float32, scale=True)
+        v2.ToDtype(torch.float32, scale=True),
         #UniformNoise(amount=0.1),
-        #v2.Normalize(
-        #    mean=(0.485, 0.456, 0.406),
-        #    std=(0.229, 0.224, 0.225)
-        #)
+        v2.Normalize(
+            mean=(0.485, 0.456, 0.406),
+            std=(0.229, 0.224, 0.225)
+        )
     ])
     checkfile = "mobilenetv3-fgsm_singlewise_attack-predictiondata.pth"
     dataset = datasets.ImageFolder('imagenet-10', transform=light_transform, loader=custom_loader)
-    targets, preds = perform_test(net, dataset, batch_size=64, saveto=checkfile)
-    #check = torch.load(checkfile, weights_only=False)
-    #targets, preds = check['targets'], check['predictions']
+    #targets, preds = perform_test(net, dataset, batch_size=64, saveto=checkfile)
+    check = torch.load(checkfile, weights_only=False)
+    targets, preds = check['targets'], check['predictions']
     run_confusion_matrix(dataset, targets, preds)
 
